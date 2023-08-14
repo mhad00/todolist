@@ -1,89 +1,130 @@
-import { useState } from "react";
-import AddTaskForm from "./components/AddTaskForm.jsx";
-import UpdateForm from "./components/UpdateForm.jsx";
-import ToDo from "./components/ToDo.jsx";
-
-import "bootstrap/dist/css/bootstrap.min.css";
-
+import logo from "./logo.svg";
 import "./App.css";
+// import { BrowserRouter, Route, Routes } from "react-router-dom";
+// import Home from "./component/home/Home";
+// import All from "./component/all/All";
+// import Active from "./component/active/Active";
+// import Completed from "./component/completed/Completed";
+import { useState, useEffect } from "react";
+import { FaCheck, FaUndoAlt, FaTrash } from "react-icons/fa";
 
 function App() {
-  const [toDo, setToDo] = useState([
-    { id: 1, title: "Task 1", status: false },
-    { id: 2, title: "Task 2", status: false },
+  const [task, setTask] = useState("");
+  const [list, setList] = useState([
+    { id: 1, task: "todo1", completed: true },
+    { id: 2, task: "todo2", completed: false },
+    { id: 3, task: "todo3", completed: false },
   ]);
 
-  const [newTask, setNewTask] = useState("");
-  const [updateData, setUpdateData] = useState("");
+  const [listToggle, setListToggle] = useState("all");
 
   const addTask = () => {
-    if (newTask) {
-      let num = toDo.length + 1;
-
-      setToDo([...toDo, { id: num, title: newTask, status: false }]);
-
-      setNewTask("");
+    if (task !== "") {
+      let num = list.length + 1;
+      setList([...list, { id: num, task: task, completed: false }]);
+      setTask("");
     }
   };
 
+  const completeTask = (id) => {
+    const updatedList = list.map((task) => {
+      if (task.id === id) {
+        return { ...task, completed: !task.completed };
+      }
+      return task;
+    });
+    setList(updatedList);
+  };
+
   const deleteTask = (id) => {
-    setToDo(toDo.filter((task) => task.id !== id));
+    const updatedList = list.filter((task) => task.id !== id);
+    setList(updatedList);
   };
 
-  const markDone = (id) => {
-    setToDo(
-      toDo.map((task) =>
-        task.id === id ? { ...task, status: !task.status } : task
-      )
-    );
+  const deleteAllCompletedTasks = () => {
+    const updatedList = list.filter((task) => !task.completed);
+    setList(updatedList);
   };
 
-  const cancelUpdate = () => {
-    setUpdateData("");
+  const listType = (type) => {
+    setListToggle(type);
   };
 
-  const changeHolder = (e) => {
-    setUpdateData({ ...updateData, title: e.target.value });
-  };
-
-  const updateTask = () => {
-    let removeOldRecord = [...toDo].filter((task) => task.id !== updateData.id);
-    setToDo([...removeOldRecord, updateData]);
-
-    setUpdateData("");
-  };
+  const showList = list.filter((task) =>
+    listToggle === "active"
+      ? !task.completed
+      : listToggle === "completed"
+      ? task.completed
+      : true
+  );
 
   return (
-    <div className="container App">
-      <br />
-      <br />
-      <h2>#ToDo</h2>
-      <br />
-      <br />
+    <div className="App">
+      <div className="home">
+        <h1>TODOLIST</h1>
 
-      {updateData && updateData ? (
-        <UpdateForm
-          updateData={updateData}
-          changeHolder={changeHolder}
-          updateTask={updateTask}
-          cancelUpdate={cancelUpdate}
-        />
-      ) : (
-        <AddTaskForm
-          newTask={newTask}
-          setNewTask={setNewTask}
-          addTask={addTask}
-        />
-      )}
+        <div className="form">
+          <input
+            className="inputTask"
+            type="text"
+            value={task}
+            onChange={(e) => {
+              setTask(e.target.value);
+            }}
+          />
+          <button onClick={addTask}>Add</button>
+        </div>
 
-      {toDo && toDo.length ? "" : "No Tasks..."}
-
-      <ToDo
-        toDo={toDo}
-        markDone={markDone}
-        setUpdateData={setUpdateData}
-        deleteTask={deleteTask}
-      />
+        <div className="link">
+          <button
+            className="linkbtn"
+            onClick={() => {
+              listType("all");
+            }}
+          >
+            All
+          </button>
+          <button
+            className="linkbtn"
+            onClick={() => {
+              listType("active");
+            }}
+          >
+            Active
+          </button>
+          <button
+            className="linkbtn"
+            onClick={() => {
+              listType("completed");
+            }}
+          >
+            Completed
+          </button>
+        </div>
+        <div className="taskList">
+          {showList.map((task) => (
+            <div className="div-task" key={task.id}>
+              <p style={{
+                textDecoration: task.completed ? 'line-through' : 'none',
+              }}>{task.task}</p>
+              <div className="task-btn">
+                <button className="completebtn" onClick={() => completeTask(task.id)}>
+                  {task.completed ? <span><FaUndoAlt size={16} color="blue"/> UNDO</span>: <span> <FaCheck size={16} color="green" /> COMPLETE</span>}
+                </button>
+                <button className="deletebtn" onClick={() => deleteTask(task.id)}> <FaTrash size={16} color="red"/>Delete</button>
+              </div>
+            </div>
+          ))}
+          {listToggle === "completed" && (
+            <div className="deleteAll">
+              <button className="deleteallbtn" onClick={deleteAllCompletedTasks}>
+                <FaTrash size={16} color="red"/>
+                Delete All
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
